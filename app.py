@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect 
+from flask import Flask, render_template, request, session, redirect, jsonify
 import sqlite3
 
 app = Flask(__name__)
@@ -75,6 +75,39 @@ def home():
 def logout():
     session.clear()
     return redirect("/")
+
+@app.route("/posts", methods=["GET"])
+def get_posts():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM posts")
+    posts = cur.fetchall()
+
+    conn.close()
+
+    return jsonify([
+        {"id": p[0], "title": p[1], "content": p[2]}
+        for p in posts
+    ])
+@app.route("/add_post", methods=["POST"])
+def add_post():
+    data = request.json
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "INSERT INTO posts (title, content, user_id) VALUES (?, ?, ?)",
+        (data["title"], data["content"], session["user_id"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "ok"})
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

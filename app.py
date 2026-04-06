@@ -76,6 +76,7 @@ def logout():
     session.clear()
     return redirect("/")
 
+# Get the data and send them to the database
 @app.route("/posts", methods=["GET"])
 def get_posts():
     conn = get_db()
@@ -107,7 +108,34 @@ def add_post():
 
     return jsonify({"status": "ok"})
 
+@app.route("/delete_post/<int:id>", methods=["DELETE"])
+def delete_post(id):
+    conn = get_db()
+    cur = conn.cursor()
 
+    cur.execute("DELETE FROM posts WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "deleted"})
+
+
+@app.route("/edit_post/<int:id>", methods=["PUT"])
+def edit_post(id):
+    data = request.json
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "UPDATE posts SET title=?, content=? WHERE id=?",
+        (data["title"], data["content"], id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "updated"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

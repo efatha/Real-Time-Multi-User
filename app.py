@@ -65,5 +65,16 @@ def register():
 
     return render_template("register.html")
 
+@app.route("/home")
+def home():
+    if "user_id" not in session:
+        return redirect("/")
+    return render_template("index.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

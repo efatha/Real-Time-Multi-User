@@ -1,9 +1,52 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, session, redirect 
+import sqlite3
 
 app = Flask(__name__)
-@app.route("/")
-def func():
-    return render_template("index.html")
+# Connect DB
+def get_db():
+    return sqlite3.connect("database.db")
+
+#  Create tables
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        password TEXT
+    )
+    """)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        content TEXT,
+        user_id INTEGER
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        user = cur.fetchone()
+
+        if user:
+            session["user_id"] = user[0]
+            return redirect("/home")
+
+    return render_template("login.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

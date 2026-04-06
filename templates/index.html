@@ -2,13 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Blog</title>
 </head>
 <body>
-    <h2>Login</h2>
-    <form method="POST">
-        <input name="username" placeholder="Username" required>
-        <button type="submit">Login</button>
+    <h2>Common blog</h2>
+    <a href="/logout">Logout</a>
+    <form method="POST">   
+      <div class="comField">
+        <input id="title" placeholder="Title">
+        <textarea id="content"></textarea>
+        <button onclick="addPost()">Add</button>
+      </div>
+      <div id="posts"></div>
     </form>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

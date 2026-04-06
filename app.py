@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, session, redirect, jsonify
 import sqlite3
 
 app = Flask(__name__)
+app.secret_key = ".env"
 # Connect DB
 def get_db():
     return sqlite3.connect("database.db")

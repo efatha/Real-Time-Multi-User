@@ -6,15 +6,13 @@
 </head>
 <body>
     <h2>Common blog</h2>
-    <a href="/logout">Logout</a>
-    <form method="POST">   
+    <a href="/logout">Logout</a>   
       <div class="comField">
-        <input id="title" placeholder="Title">
-        <textarea id="content"></textarea>
+        <input id="title" placeholder="Title"><br>
+        <textarea id="content" placeholder="Write your post here..."></textarea><br>
         <button onclick="addPost()">Add</button>
       </div>
       <div id="posts"></div>
-    </form>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

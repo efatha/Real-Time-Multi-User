@@ -83,13 +83,23 @@ def get_posts():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM posts")
+    cur.execute("""
+        SELECT posts.id, posts.title, posts.content, users.username
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+        ORDER BY posts.id DESC
+    """)
+    
     posts = cur.fetchall()
-
     conn.close()
 
     return jsonify([
-        {"id": p[0], "title": p[1], "content": p[2]}
+        {
+            "id": p[0],
+            "title": p[1],
+            "content": p[2],
+            "username": p[3]
+        }
         for p in posts
     ])
 @app.route("/add_post", methods=["POST"])

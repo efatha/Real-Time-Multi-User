@@ -22,7 +22,7 @@ function loadPosts() {
                     <div class="message-bubble">
                         <div class="meta">${post.username}</div>
                         <h5 class="fw-semibold text-white mb-2">${post.title}</h5>
-                        <p class="mb-0 text-muted">${post.content}</p>
+                        <p class="mb-0 text-white">${post.content}</p>
                     </div>
                 `;
             });

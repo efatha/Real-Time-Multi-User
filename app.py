@@ -113,7 +113,7 @@ def get_posts():
         SELECT posts.id, posts.title, posts.content, users.username
         FROM posts
         JOIN users ON posts.user_id = users.id
-        ORDER BY posts.id DESC
+        ORDER BY posts.id ASC
     """)
     
     posts = cur.fetchall()

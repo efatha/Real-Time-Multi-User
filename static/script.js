@@ -5,6 +5,7 @@ function loadPosts() {
     .then(data => {
         const container = document.getElementById("posts");
         if (container) {
+            const wasNearBottom = isNearBottom(container);
             container.innerHTML = "";
             if (!data.length) {
                 container.innerHTML = `
@@ -13,6 +14,7 @@ function loadPosts() {
                         <p class="small">Publish the first message to see the feed update live.</p>
                     </div>
                 `;
+                updateScrollButton(container);
                 return;
             }
             data.forEach(post => {
@@ -24,7 +26,10 @@ function loadPosts() {
                     </div>
                 `;
             });
-            container.scrollTop = container.scrollHeight;
+            if (autoScrollEnabled || wasNearBottom) {
+                scrollToBottom(container);
+            }
+            updateScrollButton(container);
         }
     })
     .catch(error => {
@@ -61,8 +66,72 @@ function addPost(event) {
     });
 }
 
+const postsContainer = document.getElementById("posts");
+const scrollButton = document.getElementById("scrollDownButton");
+let autoScrollEnabled = true;
+let scrollDownTimer = null;
+const SCROLL_THRESHOLD = 80;
+
+function scrollToBottom(container) {
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+}
+
+function isNearBottom(container) {
+    if (!container) return true;
+    const distanceFromBottom = container.scrollHeight - container.clientHeight - container.scrollTop;
+    return distanceFromBottom <= SCROLL_THRESHOLD;
+}
+
+function updateScrollButton(container) {
+    if (!scrollButton || !container) return;
+    if (isNearBottom(container)) {
+        scrollButton.classList.remove('show');
+    } else {
+        scrollButton.classList.add('show');
+    }
+}
+
+if (postsContainer) {
+    postsContainer.addEventListener("mouseenter", () => {
+        autoScrollEnabled = false;
+        if (scrollDownTimer) {
+            clearTimeout(scrollDownTimer);
+            scrollDownTimer = null;
+        }
+    });
+
+    postsContainer.addEventListener("mouseleave", () => {
+        if (scrollDownTimer) {
+            clearTimeout(scrollDownTimer);
+        }
+        scrollDownTimer = setTimeout(() => {
+            if (!isNearBottom(postsContainer)) {
+                scrollToBottom(postsContainer);
+            }
+            autoScrollEnabled = true;
+            updateScrollButton(postsContainer);
+        }, 5000);
+    });
+
+    postsContainer.addEventListener("scroll", () => {
+        const distanceFromBottom = postsContainer.scrollHeight - postsContainer.clientHeight - postsContainer.scrollTop;
+        autoScrollEnabled = distanceFromBottom <= SCROLL_THRESHOLD;
+        updateScrollButton(postsContainer);
+    });
+}
+
+if (scrollButton) {
+    scrollButton.addEventListener('click', () => {
+        if (!postsContainer) return;
+        scrollToBottom(postsContainer);
+        autoScrollEnabled = true;
+        updateScrollButton(postsContainer);
+    });
+}
+
 // Auto-refresh every 2 seconds (like chat) - only if posts element exists
-if (document.getElementById("posts")) {
+if (postsContainer) {
     setInterval(loadPosts, 2000);
     loadPosts();
 }

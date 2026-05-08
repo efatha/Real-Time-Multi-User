@@ -4,17 +4,19 @@ function loadPosts() {
     .then(res => res.json())
     .then(data => {
         const container = document.getElementById("posts");
-        container.innerHTML = "";
-        data.forEach(post => {
-            container.innerHTML += `
-                <div>
-                    <b>${post.username}</b>: 
-                    <h4>${post.title}</h4>
-                    <p>${post.content}</p>
-                    <hr>
-                </div>
-            `;
-        });
+        if (container) {  // Only run if element exists
+            container.innerHTML = "";
+            data.forEach(post => {
+                container.innerHTML += `
+                    <div>
+                        <b>${post.username}</b>:
+                        <h4>${post.title}</h4>
+                        <p>${post.content}</p>
+                        <hr>
+                    </div>
+                `;
+            });
+        }
     });
 }
 // Add post
@@ -33,7 +35,9 @@ function addPost() {
         loadPosts(); // refresh posts
     });
 }
-// Auto-refresh every 2 seconds (like chat)
-setInterval(loadPosts, 2000);
-// Initial load
-loadPosts();
+// Auto-refresh every 2 seconds (like chat) - only if posts element exists
+if (document.getElementById("posts")) {
+    setInterval(loadPosts, 2000);
+    // Initial load
+    loadPosts();
+}

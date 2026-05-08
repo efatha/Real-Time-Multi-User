@@ -1,36 +1,62 @@
-from flask import Flask, render_template, request, session, redirect, jsonify
+from flask import Flask, render_template, request, session, redirect, jsonify, g
 import sqlite3
 
+DATABASE = "database.db"
 app = Flask(__name__)
 app.secret_key = ".env"
-# Connect DB
+
+# Manage the DB connection per request and catch sqlite errors.
 def get_db():
-    return sqlite3.connect("database.db")
+    if "db" not in g:
+        try:
+            g.db = sqlite3.connect(DATABASE)
+            g.db.row_factory = sqlite3.Row
+        except sqlite3.Error as e:
+            app.logger.error("Unable to connect to database: %s", e)
+            raise
+    return g.db
 
-#  Create tables
+@app.teardown_appcontext
+def close_db(error=None):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+# Create tables safely.
 def init_db():
-    conn = get_db()
-    cur = conn.cursor()
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cur = conn.cursor()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        password TEXT
-    )
-    """)
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS posts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        content TEXT,
-        user_id INTEGER
-    )
-    """)
-    conn.commit()
-    conn.close()
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            password TEXT
+        )
+        """)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            content TEXT,
+            user_id INTEGER
+        )
+        """)
+        conn.commit()
+    except sqlite3.Error as e:
+        app.logger.error("Failed to initialize database: %s", e)
+        raise
+    finally:
+        if conn:
+            conn.close()
 
 init_db()
+
+@app.errorhandler(sqlite3.DatabaseError)
+def handle_database_error(error):
+    app.logger.error("Database error: %s", error)
+    return jsonify({"error": "A database error occurred."}), 500
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
